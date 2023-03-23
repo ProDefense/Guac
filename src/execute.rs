@@ -10,7 +10,9 @@ use windows::Win32::Foundation::{E_POINTER, HANDLE};
 use windows::Win32::System::Memory::{
     VirtualAlloc, MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE,
 };
-use windows::Win32::System::Threading::{CreateThread, THREAD_CREATION_FLAGS};
+use windows::Win32::System::Threading::{
+    CreateThread, LPTHREAD_START_ROUTINE, THREAD_CREATION_FLAGS,
+};
 
 // Execute shellcode
 pub fn exec(shellcode: &mut [u8]) -> Result<HANDLE, Error> {
@@ -28,16 +30,9 @@ pub fn exec(shellcode: &mut [u8]) -> Result<HANDLE, Error> {
 
     // Execute the shellcode
     unsafe {
-        let lp_start_addr: extern "system" fn(*mut std::ffi::c_void) -> u32 =
-            std::mem::transmute(alloced_mem);
-        CreateThread(
-            None,
-            0,
-            Some(lp_start_addr),
-            None,
-            THREAD_CREATION_FLAGS(0),
-            None,
-        )
+        let lp_start_addr: LPTHREAD_START_ROUTINE = Some(std::mem::transmute(alloced_mem));
+
+        CreateThread(None, 0, lp_start_addr, None, THREAD_CREATION_FLAGS(0), None)
     }
 }
 
